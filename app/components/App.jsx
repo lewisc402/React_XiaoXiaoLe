@@ -1,5 +1,4 @@
 import React from 'react';
-// import Container from './Container.jsx';
 import Board from './Board.jsx';
 
 require('./App.css');
