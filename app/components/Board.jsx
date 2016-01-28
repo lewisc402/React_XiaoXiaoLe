@@ -39,35 +39,56 @@ export default class Board extends React.Component {
   };
   match = ([x, y]) => {
     let matchCells = [];
+    let rows = [];
+    let cols = [];
     let cells = this.state.cells;
     matchCells.push([x,y]);
 
-    const right = (x, y) => {
-      let oldId = x * 4 + y;
-      let newId = x * 4 + (y + 1);
-      if((y + 1) < 4 && cells[oldId].animal == cells[newId].animal) {
-        matchCells.push([x, y+1]);
-        right(x, y+1);
-      } else return;
+    const id = x * 4 + y;
+    let animal = cells[id].animal;
+    //right
+    for(let i=y+1; i<4; i++) {
+      let newId = x * 4 + i;
+      if(animal == cells[newId].animal) {
+        rows.push([x,i]);
+      } else break;
+    }
+    //left
+    for(let i=y-1; i>=0; i--) {
+      let newId = x * 4 + i;
+      if(animal == cells[newId].animal) {
+        rows.push([x,i]);
+      } else break;
+    } 
+    if (rows.length >= 2) {
+      matchCells = matchCells.concat(rows);
+    }
+    //up
+    for(let i=x-1; i>=0; i--) {
+      let newId = i * 4 + y;
+      if(animal == cells[newId].animal) {
+        cols.push([i,y]);
+      } else break;
+    }
+    //down
+    for(let i=x+1; i<4; i++) {
+      let newId = i * 4 + y;
+      if(animal == cells[newId].animal) {
+        cols.push([i,y]);
+      } else break;
     }
 
-    const left = (x, y) => {
-      let oldId = x * 4 + y;
-      let newId = x * 4 + (y - 1);
-      if(((y - 1) >= 0) && cells[oldId].animal == cells[newId].animal) {
-        matchCells.push([x, y-1]);
-        left(x, y-1);
-      } else return;
+    if (cols.length >= 2) {
+      matchCells = matchCells.concat(cols);
     }
+    // console.log(rows);
+    // console.log(cols);
+    // console.log(matchCells);
 
-    right(x,y);
-    left(x,y);
     return matchCells;
   };
   toXY = (id) => {
-    const x = Math.floor(id / 4);
-    const y = id % 4;
-    return [x, y];
+    return [Math.floor(id / 4), id % 4];
   };
   updateCell = (sourceId, targetId) => {
     let cells = this.state.cells;
@@ -76,21 +97,49 @@ export default class Board extends React.Component {
     [cells[sourceId].animal,cells[targetId].animal] = [cells[targetId].animal,cells[sourceId].animal];
     this.setState({cells});
 
-    if (this.match(this.toXY(sourceId)).length >= 3) {
-      cleanCells = cleanCells.concat(this.match(this.toXY(sourceId)));
+    let srcCells = this.match(this.toXY(sourceId));
+    let targetCells = this.match(this.toXY(targetId));
+    if (srcCells.length >= 3) {
+      cleanCells = cleanCells.concat(srcCells);
     }
-    if (this.match(this.toXY(targetId)).length >= 3) {
-      cleanCells = cleanCells.concat(this.match(this.toXY(targetId)));
+    if (targetCells.length >= 3) {
+      cleanCells = cleanCells.concat(targetCells);
     }
 
     if(cleanCells.length >= 3) {
       cleanCells.forEach((pos) => {
         const [x,y] = pos;
-        const id = x*4 + y;
-        cells[id].animal = '';
+        cells[x*4 + y].animal = '';
       });
     } else {
       [cells[sourceId].animal,cells[targetId].animal] = [cells[targetId].animal,cells[sourceId].animal];
+    }
+    this.setState({cells});
+    this.fillValue();
+  };
+  fillValue = () => {
+    let cells = this.state.cells;
+    const animals = ['A','B','C'];
+    for(let i = 15; i>=0; i--) {
+      if(!cells[i].animal) {
+        let [x, y] = this.toXY(i);
+        for(let mx = x; mx >= 0; mx--) {
+          if(cells[mx * 4 + y].animal) {
+            if(mx >= 0) { 
+              cells[i].animal = cells[mx * 4 + y].animal;
+              cells[mx * 4 + y].animal = '';
+              break;
+            }
+            // } else {
+            //   cells[i].animal = animals[Math.floor(Math.random()*3)];
+            // }
+          } else if(mx == 0) {
+            cells[i].animal = animals[Math.floor(Math.random()*3)];
+            break;
+          }
+        }
+        // cells[i].animal = animals[Math.floor(Math.random()*3)];
+      }
     }
     this.setState({cells});
   };

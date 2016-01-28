@@ -7,12 +7,7 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
   }
-
   render() {
-    // const rows = [];
-    // for (let i = 0; i < 16; i++) {
-    //   rows.push(<Container id={'cid' + i}/>);
-    // }
     return (
       <Board />
     );

@@ -23,14 +23,13 @@ const canMove = (s, t) => {
 const cellTarget = {
 	canDrop(props, monitor) {
 		const sourceProps = monitor.getItem();
-
     	const targetCellId = props.cellId;
     	const targetValue = props.value;
 
     	return true;
 	},
 
-    drop(props, monitor) {
+    hover(props, monitor) {
     	const sourceProps = monitor.getItem();
 
     	const sourceUpdateCell = sourceProps.updateCell;
