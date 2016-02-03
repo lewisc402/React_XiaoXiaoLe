@@ -1,5 +1,7 @@
 import React from 'react';
 import Cell from './Cell.jsx';
+import update from 'react/lib/update';
+// import Animal from './Animal.jsx';
 import {DragDropContext} from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend';
 
@@ -7,28 +9,42 @@ import HTML5Backend from 'react-dnd-html5-backend';
 export default class Board extends React.Component {
   constructor(props) {
     super(props);
+    this.moveCells = this.moveCells.bind(this);
     this.state = {cells:[]};
-    this.createCell();
+    this.initCell();
   }
-	renderCell(i) {
-		return(
- 	  	  <Cell key={i} id={this.state.cells[i].id} animal={this.state.cells[i].animal} updateCell={this.updateCell} />
-		);
-	}
   render() {
-    const rows = [];
-    for(let i = 0; i < 16; i++) {
-      rows.push(this.renderCell(i));
+    const {cells} = this.state;
+    let rows = [];
+    for(var i = 0; i < 4; i++) {
+      for(var j = 0; j < 4; j++) {
+        const id = i * 4 + j;
+        rows.push(<Cell key={cells[id].id} index={id} id={cells[id].id} animal={cells[id].animal} moveCells={this.moveCells} />);
+      }
     }
 
     return (
-      <div className="grid" ref="cells">
-       {rows}
+      <div className="grid">
+      <div className="row">
+        {cells.filter((elem, i) => { return i < 4}).map((cell, i) => {
+          return (
+          <Cell key={cell.id} index={i} id={cell.id} animal={cell.animal} moveCells={this.moveCells} />
+          );
+          }
+        )} 
+      </div>  
+      <div className="row">
+        {cells.filter((elem, i) => { return 4 <= i && i < 8}).map((cell, i) => {
+          return (
+          <Cell key={cell.id} index={i} id={cell.id} animal={cell.animal} moveCells={this.moveCells} />
+          );
+          }
+        )} 
+      </div>  
       </div>
     );
   }
-  createCell = () => {
-    const cells = this.state.cells;
+  initCell = () => {
     const animals = ['A','B','C'];
     for(let i = 0; i < 16; i++) {
       let cell = {};
@@ -42,10 +58,10 @@ export default class Board extends React.Component {
     let rows = [];
     let cols = [];
     let cells = this.state.cells;
-    matchCells.push([x,y]);
+    let animal = cells[x * 4 + y].animal;
+    // matchCells.push([x,y]);
+    console.log('matchCells: ' + x + ' ' + y);
 
-    const id = x * 4 + y;
-    let animal = cells[id].animal;
     //right
     for(let i=y+1; i<4; i++) {
       let newId = x * 4 + i;
@@ -60,7 +76,7 @@ export default class Board extends React.Component {
         rows.push([x,i]);
       } else break;
     } 
-    if (rows.length >= 2) {
+    if (rows.length >= 3) {
       matchCells = matchCells.concat(rows);
     }
     //up
@@ -78,44 +94,23 @@ export default class Board extends React.Component {
       } else break;
     }
 
-    if (cols.length >= 2) {
+    if (cols.length >= 3) {
       matchCells = matchCells.concat(cols);
     }
     // console.log(rows);
-    // console.log(cols);
-    // console.log(matchCells);
-
+    console.log('lll: ' + matchCells.length);
     return matchCells;
   };
   toXY = (id) => {
     return [Math.floor(id / 4), id % 4];
   };
-  updateCell = (sourceId, targetId) => {
-    let cells = this.state.cells;
-    let cleanCells = [];
-
-    [cells[sourceId].animal,cells[targetId].animal] = [cells[targetId].animal,cells[sourceId].animal];
-    this.setState({cells});
-
-    let srcCells = this.match(this.toXY(sourceId));
-    let targetCells = this.match(this.toXY(targetId));
-    if (srcCells.length >= 3) {
-      cleanCells = cleanCells.concat(srcCells);
-    }
-    if (targetCells.length >= 3) {
-      cleanCells = cleanCells.concat(targetCells);
-    }
-
-    if(cleanCells.length >= 3) {
-      cleanCells.forEach((pos) => {
-        const [x,y] = pos;
-        cells[x*4 + y].animal = '';
-      });
-    } else {
-      [cells[sourceId].animal,cells[targetId].animal] = [cells[targetId].animal,cells[sourceId].animal];
-    }
-    this.setState({cells});
-    this.fillValue();
+  moveCells = (sourceIndex, targetIndex) => {
+    const {cells} = this.state;
+    const cell = cells[sourceIndex];
+    // if(this.match(this.toXY(sourceIndex)).length >=3) {
+      // console.log(sourceIndex + ' ' + targetIndex);
+      this.setState(update(this.state, {cells: {$splice: [[sourceIndex,1],[targetIndex,0,cell]]}}));
+    // }
   };
   fillValue = () => {
     let cells = this.state.cells;
@@ -142,15 +137,6 @@ export default class Board extends React.Component {
       }
     }
     this.setState({cells});
-  };
-  clean = () => {
-    const cells = this.refs.cells.childNodes;
-    for (let i = 0; i < cells.length; i++) {
-      let value = cells[i].textContent;
-      let x = Math.floor(i/4);
-      let y = i % 4;
-      console.log( x + ' ' + y + ' ' + value);
-    }
   };
 }
 // Board.defaultProps = { r: 'xx' };  init props

@@ -10,9 +10,16 @@ h1{
 	background: deepskyblue;
 	align-content: flex-start;
 }
+.row {
+	display: flex;
+	flex-flow: row wrap;
+	width: 200px;
+	height: 50px;
+}
 .cell {
 	box-sizing: border-box;
-	flex: 0 0 25%;
+	/*width: 100px;*/
+	flex: 0 0 50px;
 	border: 1px solid;
 	height: 50px;
 	background: tomato;
