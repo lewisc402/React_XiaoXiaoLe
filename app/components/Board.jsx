@@ -1,142 +1,141 @@
 import React from 'react';
 import Cell from './Cell.jsx';
+import Animal from './Animal.jsx';
 import update from 'react/lib/update';
-// import Animal from './Animal.jsx';
+import Container from './Container.jsx';
 import {DragDropContext} from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend';
 
-@DragDropContext(HTML5Backend)
+// @DragDropContext(HTML5Backend)
 export default class Board extends React.Component {
   constructor(props) {
     super(props);
     this.moveCells = this.moveCells.bind(this);
-    this.state = {cells:[]};
-    this.initCell();
+    this.state = {containers:[]};
+    this.initContainers();
   }
   render() {
-    const {cells} = this.state;
+    const {containers} = this.state;
     let rows = [];
-    for(var i = 0; i < 4; i++) {
-      for(var j = 0; j < 4; j++) {
-        const id = i * 4 + j;
-        rows.push(<Cell key={cells[id].id} index={id} id={cells[id].id} animal={cells[id].animal} moveCells={this.moveCells} />);
-      }
-    }
 
     return (
       <div className="grid">
-      <div className="row">
-        {cells.filter((elem, i) => { return i < 4}).map((cell, i) => {
+        {containers.filter((elem, i) => { return true }).map((container, i) => {
           return (
-          <Cell key={cell.id} index={i} id={cell.id} animal={cell.animal} moveCells={this.moveCells} />
+          <Container key={container.id} index={i} cid = {i} cell={container.cell}moveCells={this.moveCells}/>
           );
           }
         )} 
-      </div>  
-      <div className="row">
-        {cells.filter((elem, i) => { return 4 <= i && i < 8}).map((cell, i) => {
-          return (
-          <Cell key={cell.id} index={i} id={cell.id} animal={cell.animal} moveCells={this.moveCells} />
-          );
-          }
-        )} 
-      </div>  
       </div>
     );
   }
-  initCell = () => {
+
+  initContainers = () => {
     const animals = ['A','B','C'];
     for(let i = 0; i < 16; i++) {
-      let cell = {};
-      cell.id = i;
-      cell.animal = animals[Math.floor(Math.random()*3)];
-      this.state.cells.push(cell);
+      let container = {};
+      container.id = i;
+      // container.cell = i+'cl';
+      container.cell = animals[Math.floor(Math.random()*3)];
+      this.state.containers.push(container);
     }
   };
   match = ([x, y]) => {
     let matchCells = [];
     let rows = [];
     let cols = [];
-    let cells = this.state.cells;
-    let animal = cells[x * 4 + y].animal;
+    let containers = this.state.containers;
+    let cell = containers[x * 4 + y].cell;
     // matchCells.push([x,y]);
-    console.log('matchCells: ' + x + ' ' + y);
+    // console.log('matchCells: ' + x + ' ' + y);
 
     //right
     for(let i=y+1; i<4; i++) {
       let newId = x * 4 + i;
-      if(animal == cells[newId].animal) {
+      if(cell == containers[newId].cell) {
         rows.push([x,i]);
       } else break;
     }
     //left
     for(let i=y-1; i>=0; i--) {
       let newId = x * 4 + i;
-      if(animal == cells[newId].animal) {
+      if(cell == containers[newId].cell) {
         rows.push([x,i]);
       } else break;
     } 
-    if (rows.length >= 3) {
+    if (rows.length >= 2) {
       matchCells = matchCells.concat(rows);
     }
     //up
     for(let i=x-1; i>=0; i--) {
       let newId = i * 4 + y;
-      if(animal == cells[newId].animal) {
+      if(cell == containers[newId].cell) {
         cols.push([i,y]);
       } else break;
     }
     //down
     for(let i=x+1; i<4; i++) {
       let newId = i * 4 + y;
-      if(animal == cells[newId].animal) {
+      if(cell == containers[newId].cell) {
         cols.push([i,y]);
       } else break;
     }
 
-    if (cols.length >= 3) {
+    if (cols.length >= 2) {
       matchCells = matchCells.concat(cols);
     }
-    // console.log(rows);
-    console.log('lll: ' + matchCells.length);
+    console.log(matchCells);
+    if (matchCells.length >=2) {
+      matchCells.push([x,y]);
+    }
     return matchCells;
   };
   toXY = (id) => {
     return [Math.floor(id / 4), id % 4];
   };
   moveCells = (sourceIndex, targetIndex) => {
-    const {cells} = this.state;
-    const cell = cells[sourceIndex];
-    // if(this.match(this.toXY(sourceIndex)).length >=3) {
-      // console.log(sourceIndex + ' ' + targetIndex);
-      this.setState(update(this.state, {cells: {$splice: [[sourceIndex,1],[targetIndex,0,cell]]}}));
-    // }
+    let {containers} = this.state;
+    let cell = containers[sourceIndex];
+    const targetcell = containers[targetIndex];
+
+    console.log('sss' + typeof targetIndex);
+    let cl = containers[targetIndex].cell;
+    containers[targetIndex].cell = containers[sourceIndex].cell; 
+    containers[sourceIndex].cell = cl; 
+    // let containers2 = update(this.state, {containers: {$splice:}
+    this.setState({containers:containers});
+    const mcells = this.match(this.toXY(sourceIndex));
+    mcells.forEach(([x,y], i) => {
+      containers[x * 4 + y].cell = '';
+    })
+    this.setState({containers:containers});
+    this.fillValue();
   };
   fillValue = () => {
-    let cells = this.state.cells;
-    const animals = ['A','B','C'];
+    let containers = this.state.containers;
+    let animals = ['A','B','C'];
     for(let i = 15; i>=0; i--) {
-      if(!cells[i].animal) {
+      if(!containers[i].cell) {
         let [x, y] = this.toXY(i);
         for(let mx = x; mx >= 0; mx--) {
-          if(cells[mx * 4 + y].animal) {
+          if(containers[mx * 4 + y].cell) {
             if(mx >= 0) { 
-              cells[i].animal = cells[mx * 4 + y].animal;
-              cells[mx * 4 + y].animal = '';
+              containers[i].cell = containers[mx * 4 + y].cell;
+              containers[mx * 4 + y].cell = '';
               break;
             }
             // } else {
-            //   cells[i].animal = animals[Math.floor(Math.random()*3)];
+            //   containers[i].cell = animals[Math.floor(Math.random()*3)];
             // }
           } else if(mx == 0) {
-            cells[i].animal = animals[Math.floor(Math.random()*3)];
+            containers[i].cell = animals[Math.floor(Math.random()*3)];
             break;
           }
         }
-        // cells[i].animal = animals[Math.floor(Math.random()*3)];
+        // containers[i].cell = animals[Math.floor(Math.random()*3)];
       }
     }
-    this.setState({cells});
+    this.setState({containers});
   };
 }
 // Board.defaultProps = { r: 'xx' };  init props
